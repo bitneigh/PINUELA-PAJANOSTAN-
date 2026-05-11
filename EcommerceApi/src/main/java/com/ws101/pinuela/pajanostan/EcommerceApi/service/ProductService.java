@@ -32,7 +32,7 @@ public class ProductService {
         return products.stream()
                 .filter(p -> p.getId().equals(id))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new RuntimeException("Product with ID " + id + " not found"));
     }
 
     // Method to create a new product
@@ -52,5 +52,15 @@ public class ProductService {
         return products.stream()
                 .filter(p -> p.getCategory().equalsIgnoreCase(category))
                 .collect(Collectors.toList());
+    }
+    public Product updateProduct(Long id, Product updatedProduct) {
+        for (int i = 0; i < products.size(); i++) {
+            if (products.get(i).getId().equals(id)) {
+                updatedProduct.setId(id);
+                products.set(i, updatedProduct);
+                return updatedProduct;
+            }
+        }
+        return null;
     }
 }
