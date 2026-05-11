@@ -30,7 +30,6 @@ tasks.named('test') {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// DAGDAG MO ITONG MGA LINES NA ITO PARA SA LOMBOK:
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testCompileOnly 'org.projectlombok:lombok'
