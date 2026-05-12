@@ -26,6 +26,16 @@ This project is a **Spring Boot REST API** developed for managing product inform
 | **PUT** | `/api/v1/products/{id}` | Update product | 200 OK / 404 |
 | **DELETE** | `/api/v1/products/{id}` | Delete product | 204 No Content |
 
+## 👥 Contributors
+* **Britney Ashley Pinuela** - *Lead Developer / Documentation*
+* **Stephanie Pajanostan** - *Pair Programmer / Quality Assurance*
+
+> **Pair Programming Session:** This project was developed collaboratively.
+> 
+> Co-authored-by: Britney Ashley Pinuela <bitneighpinuela@gmail.com>
+> 
+> Co-authored-by: Stephanie Pajanostan <pajanostanstephanie15@gmail.com>
+
 ## 🧪 Sample Request & Response (Validation Test)
 To verify the validation logic and exception handling, use this cURL command:
 
