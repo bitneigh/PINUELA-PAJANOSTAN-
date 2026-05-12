@@ -1,104 +1,75 @@
 package com.ws101.pinuela.pajanostan.EcommerceApi.service;
 
 import com.ws101.pinuela.pajanostan.EcommerceApi.model.Product;
+import com.ws101.pinuela.pajanostan.EcommerceApi.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Service class that manages the business logic for Product operations.
- * Uses an in-memory list as a temporary data store.
+ * Service class that manages business logic for Product operations.
+ * Refactored to use Spring Data JPA Repository instead of an ArrayList.
  */
 @Service
 public class ProductService {
-    // In-memory list to store products
-    private List<Product> products = new ArrayList<>();
-    private Long nextId = 1L; // Simple counter for unique IDs
+
+    @Autowired
+    private ProductRepository productRepository; // Injected repository to replace manual ArrayList
 
     /**
-     * Constructor that initializes the service with 10 sample product entries.
+     * Retrieves all products from the database.
      */
-    public ProductService() {
-        // Initialize with sample data (at least 10 products)
-        for (int i = 1; i <= 10; i++) {
-            products.add(new Product((long) i, "Product " + i, "Description for product " + i,
-                    100.0 * i, "Category " + (i % 3), 10 + i, "http://image.url/" + i));
-            nextId++;
-        }
-    }
-
-    /**
-     * Retrieves the complete list of products currently in the system.
-     * * @return A list containing all products.
-     */
-    // Method to retrieve all products
     public List<Product> getAllProducts() {
-        return products;
+        return productRepository.findAll(); // Simplified using JPA findAll()
     }
 
     /**
-     * Searches for a specific product by its ID using Java Streams.
-     * * @param id The unique ID of the product to search for.
-     * @return The product object if found.
-     * @throws RuntimeException If no product matches the provided ID.
+     * Finds a product by its unique database ID.
      */
-    // Method to find a product by ID
     public Product getProductById(Long id) {
-        return products.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst()
+        return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product with ID " + id + " not found"));
     }
 
     /**
-     * Adds a new product to the list and assigns it a unique generated ID.
-     * * @param product The product object to be added.
-     * @return The saved product with its assigned ID.
+     * Saves a new product or updates an existing one in the database.
      */
-    // Method to create a new product
     public Product createProduct(Product product) {
-        product.setId(nextId++); // Assign unique ID
-        products.add(product);
-        return product;
+        return productRepository.save(product); // Manual ID counter removed; JPA handles auto-increment
     }
 
     /**
-     * Removes a product from the list based on its ID.
-     * * @param id The ID of the product to be removed.
-     * @return True if a product was removed, false otherwise.
+     * Deletes a product from the database by ID.
      */
-    // Method to delete a product
     public boolean deleteProduct(Long id) {
-        return products.removeIf(p -> p.getId().equals(id));
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     /**
-     * Filters the product list by category (case-insensitive).
-     * * @param category The name of the category to filter by.
-     * @return A filtered list of products belonging to the specified category.
+     * Task 3.2.1: Method Naming query to filter by category name.
      */
-    // Filter by category
     public List<Product> filterByCategory(String category) {
-        return products.stream()
-                .filter(p -> p.getCategory().equalsIgnoreCase(category))
-                .collect(Collectors.toList());
+        return productRepository.findByCategoryNameIgnoreCase(category); // Uses the method naming convention
     }
 
     /**
-     * Updates an existing product's details in the list.
-     * * @param id The ID of the product to be updated.
-     * @param updatedProduct The new product data to apply.
-     * @return The updated product object, or null if the ID was not found.
+     * Task 3.2.2: Uses JPQL @Query to find products within a price range.
+     */
+    public List<Product> getProductsByPrice(Double min, Double max) {
+        return productRepository.findProductsByPriceRange(min, max); // Uses the custom @Query defined in repository
+    }
+
+    /**
+     * Updates an existing product's details.
      */
     public Product updateProduct(Long id, Product updatedProduct) {
-        for (int i = 0; i < products.size(); i++) {
-            if (products.get(i).getId().equals(id)) {
-                updatedProduct.setId(id);
-                products.set(i, updatedProduct);
-                return updatedProduct;
-            }
+        if (productRepository.existsById(id)) {
+            updatedProduct.setId(id);
+            return productRepository.save(updatedProduct);
         }
         return null;
     }
