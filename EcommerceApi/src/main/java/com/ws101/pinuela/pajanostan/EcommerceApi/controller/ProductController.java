@@ -4,6 +4,7 @@ import com.ws101.pinuela.pajanostan.EcommerceApi.model.Product;
 import com.ws101.pinuela.pajanostan.EcommerceApi.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class ProductController {
      * Requirement: POST a new product (Persistence check).
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Product createProduct(@RequestBody Product product) {
         return productService.createProduct(product);
     }
@@ -52,6 +54,7 @@ public class ProductController {
      * Requirement: DELETE a product by ID.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         return productService.deleteProduct(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
