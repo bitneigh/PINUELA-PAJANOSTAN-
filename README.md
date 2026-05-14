@@ -1,4 +1,41 @@
-# 🛒 Ecommerce API Project
+# TechStore E-Commerce Project (LABORATORY 8)
+
+---
+
+## 🚀 Task 9: Documentation & Submission
+
+### 📊 Database Schema
+Our system uses a relational database structure to manage products and order consistency.
+* **Table:** `products`
+   * `id` (Primary Key, Long): Unique identifier for each product.
+   * `name` (String): The name of the tech product.
+   * `price` (Double): The unit price in PHP.
+   * `description` (Text): Detailed product information.
+   * `image_url` (String): Path or URL to the product image.
+   * `category` (String): Product classification (e.g., Audio, Wearables).
+
+### 🔌 API Endpoints
+The following endpoints are implemented in the Spring Boot backend:
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/api/products` | Fetches all products from the database. |
+| **GET** | `/api/products/{id}` | Fetches a specific product by its ID. |
+
+### 📸 Evidence of Success
+
+#### Database Table
+![Database Table](EcommerceApi/documentation/db_table.png)
+
+#### Browser Console Fetch
+![Console Fetch](EcommerceApi/documentation/console_fetch.png)
+
+
+## 📝 Code Quality & Logic
+* **JPA Entities:** Documented with Javadoc to explain fields and table mapping.
+* **JavaScript Fetch:** Implemented with `try/catch` blocks for robust error handling and API connectivity verification.
+
+# 🛒 Ecommerce API Project (LABORATORY 7)
 
 ## 📝 Project Overview
 This project is a **Spring Boot REST API** developed for managing product information in an e-commerce system. It features a complete set of CRUD (Create, Read, Update, Delete) operations and specialized filtering logic. This application was built as part of the **WS101 (Web Systems and Technologies)** laboratory requirements.
