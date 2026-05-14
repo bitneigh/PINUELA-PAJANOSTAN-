@@ -2,109 +2,75 @@ package com.ws101.pinuela.pajanostan.EcommerceApi.controller;
 
 import com.ws101.pinuela.pajanostan.EcommerceApi.model.Product;
 import com.ws101.pinuela.pajanostan.EcommerceApi.service.ProductService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controller class that handles all HTTP requests related to product management.
- * Provides endpoints for CRUD operations and filtering.
- */
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/api/products")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
 
     /**
-     * Retrieves all products from the system.
-     * * @return A list of all products with a 200 OK status.
+     * Requirement: GET all products from the database.
      */
-    // GET /api/v1/products
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
+    public List<Product> getAllProducts() {
+        return productService.getAllProducts();
     }
 
     /**
-     * Retrieves a specific product by its unique ID.
-     * * @param id The unique identifier of the product.
-     * @return The product details if found (200 OK), or a 404 Not Found status.
+     * Requirement: GET a single product by ID.
      */
-    // GET /api/v1/products/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Product product = productService.getProductById(id);
-        if (product != null) {
-            return new ResponseEntity<>(product, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
     /**
-     * Filters products based on a specific criteria like category.
-     * * @param filterType The type of filter to apply (e.g., "category").
-     * @param filterValue The value to filter by (e.g., "Electronics").
-     * @return A list of filtered products with 200 OK status.
+     * Requirement: POST a new product (Persistence check).
      */
-    // GET /api/v1/products/filter?filterType=category&filterValue=Electronics
-    @GetMapping("/filter")
-    public ResponseEntity<List<Product>> filterProducts(
-            @RequestParam String filterType,
-            @RequestParam String filterValue) {
-
-        if ("category".equalsIgnoreCase(filterType)) {
-            return new ResponseEntity<>(productService.filterByCategory(filterValue), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
-    }
-
-    /**
-     * Creates a new product entry in the system.
-     * * @param product The product object to be created.
-     * @return The created product with a 201 Created status.
-     * throws org.springframework.web.bind.MethodArgumentNotValidException if validation fails.
-     */
-    // POST /api/v1/products
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
-        Product createdProduct = productService.createProduct(product);
-        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
+    public Product createProduct(@RequestBody Product product) {
+        return productService.createProduct(product);
     }
 
     /**
-     * Updates an existing product's information.
-     * * @param id The ID of the product to update.
-     * @param product The updated product data.
-     * @return The updated product (200 OK) or 404 Not Found if the ID does not exist.
-     * throws org.springframework.web.bind.MethodArgumentNotValidException if the new data is invalid.
+     * Requirement: PUT (Update) an existing product.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product product) {
-        Product updatedProduct = productService.updateProduct(id, product);
-        if (updatedProduct != null) {
-            return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        Product updated = productService.updateProduct(id, product);
+        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
 
     /**
-     * Deletes a product from the system using its ID.
-     * * @param id The unique identifier of the product to be deleted.
-     * @return A 204 No Content status if successful, or 404 Not Found.
+     * Requirement: DELETE a product by ID.
      */
-    // DELETE /api/v1/products/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        boolean deleted = productService.deleteProduct(id);
-        if (deleted) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return productService.deleteProduct(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    // --- Task 3 Custom Query Endpoints ---
+
+    /**
+     * Requirement 3.2.1: Filter by category name.
+     */
+    @GetMapping("/filter/category")
+    public List<Product> filterByCategory(@RequestParam String name) {
+        return productService.filterByCategory(name);
+    }
+
+    /**
+     * Requirement 3.2.2: Filter by price range using JPQL.
+     */
+    @GetMapping("/filter/price")
+    public List<Product> filterByPrice(@RequestParam Double min, @RequestParam Double max) {
+        return productService.getProductsByPrice(min, max);
     }
 }
