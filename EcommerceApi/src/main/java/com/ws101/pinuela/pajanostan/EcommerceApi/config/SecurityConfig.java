@@ -13,20 +13,39 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Enable CSRF for form submissions (Requirement sa Task 1.4)
-                .csrf(Customizer.withDefaults())
 
-                // 2. Configure Endpoints (Requirement sa Task 1.4)
+                .csrf(csrf -> csrf.disable())
+
+                // Configure Endpoints
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/products/**", "/api/v1/auth/register").permitAll()
-                        .requestMatchers("/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/products/**", "/api/v1/auth/register").permitAll() // Public access
                         .anyRequest().authenticated()
                 )
 
-                // 3. Enable Form Login (Requirement sa Task 1.4)
-                .formLogin(Customizer.withDefaults())
+                // Login Endpoint
+                .formLogin(form -> form
+                        .loginProcessingUrl("/api/v1/auth/login")
 
-                // 4. Session Management (Requirement sa Task 1.4)
+                        .successHandler((request, response, authentication) -> {
+                            response.setStatus(200);
+                        })
+
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(401);
+                        })
+                        .permitAll()
+
+                )
+
+                // Logout Endpoint
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/auth/logout") // Specific URL for logout
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
+
+                // 5. Session Management (Task 1.4 & 2.2)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 );
