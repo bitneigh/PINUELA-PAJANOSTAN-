@@ -6,13 +6,23 @@ let cart = JSON.parse(localStorage.getItem('techstore_cart')) || [];
 async function fetchProducts() {
     try {
         const response = await fetch('http://localhost:8080/api/products');
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
         products = await response.json();
+
+        // Ito yung kailangan mo para makita ang listahan sa F12 Console
+        console.log("Task 8 - Fetched Products from Database:", products);
+
         renderProducts();
     } catch (error) {
         console.error("Fetch API Error:", error.message);
         const grid = document.querySelector('.product-grid');
-        if (grid) grid.innerHTML = `<p style="color:red; text-align:center;">Error: ${error.message}</p>`;
+        if (grid) {
+            grid.innerHTML = `<p style="color:red; text-align:center;">Failed to load products: ${error.message}</p>`;
+        }
     }
 }
 
@@ -20,15 +30,17 @@ async function fetchProducts() {
 function renderProducts() {
     const grid = document.querySelector('.product-grid');
     if (!grid) return;
-    grid.innerHTML = products.length === 0 ? "<p>No products available.</p>" : "";
+
+    grid.innerHTML = products.length === 0 ? "<p>No products available right now.</p>" : "";
 
     products.forEach(p => {
         const article = document.createElement('article');
+        article.className = "product-card"; // Added class for easier styling/animation
         article.innerHTML = `
             <img src="${p.imageUrl || 'https://via.placeholder.com/400'}" alt="${p.name}">
             <div class="product-info">
                 <h3>${p.name}</h3>
-                <p class="price">₱${p.price}</p>
+                <p class="price">₱${p.price.toLocaleString()}</p>
             </div>
             <button class="shimmer-btn add-to-cart" data-id="${p.id}">Add to Cart</button>
         `;
@@ -42,12 +54,18 @@ document.body.addEventListener('click', (e) => {
     if (e.target.classList.contains('add-to-cart')) {
         const id = parseInt(e.target.getAttribute('data-id'));
         const product = products.find(prod => prod.id === id);
+
         if (product) {
             const existing = cart.find(item => item.id === id);
-            if (existing) existing.quantity += 1;
-            else cart.push({ ...product, quantity: 1 });
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
 
             localStorage.setItem('techstore_cart', JSON.stringify(cart));
+
+            // Interaction feedback
             alert(`${product.name} added to cart!`);
             renderCart();
         }
@@ -60,16 +78,25 @@ function renderCart() {
     const totalEl = document.getElementById('cart-total');
 
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    if (totalEl) totalEl.textContent = `Total: ₱${total.toLocaleString()}`;
+    if (totalEl) {
+        totalEl.textContent = `Total: ₱${total.toLocaleString()}`;
+    }
 
     if (!container) return;
+
     container.innerHTML = cart.length === 0 ? "<p>Your bag is empty.</p>" : "";
+
     cart.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = "cart-item";
         div.innerHTML = `
-            <div style="flex:1"><h4>${item.name}</h4><p>₱${item.price}</p></div>
-            <input type="number" value="${item.quantity}" min="0" class="qty-change" data-index="${index}">
+            <div style="flex:1">
+                <h4>${item.name}</h4>
+                <p>₱${item.price.toLocaleString()} x ${item.quantity}</p>
+            </div>
+            <input type="number" value="${item.quantity}" min="0" 
+                   class="qty-change" data-index="${index}" 
+                   style="width: 50px; text-align: center;">
         `;
         container.appendChild(div);
     });
@@ -80,21 +107,25 @@ document.addEventListener('submit', (e) => {
     if (e.target.id === 'checkout-form') {
         e.preventDefault();
 
-        const name = document.getElementById('fullname').value.trim();
-        const address = document.getElementById('address').value.trim();
+        const nameInput = document.getElementById('fullname');
+        const addressInput = document.getElementById('address');
+
+        const name = nameInput ? nameInput.value.trim() : "Customer";
+        const address = addressInput ? addressInput.value.trim() : "Not specified";
 
         if (cart.length === 0) {
-            alert("Your cart is empty!");
+            alert("Your cart is empty! Add some items before checking out.");
             return;
         }
 
-        // Custom alert message
-        alert(`Hi ${name}! We are now processing your checkout for address: ${address}. Please wait...`);
+        // Show processing state
+        alert(`Hi ${name}! We are now processing your order for: ${address}.`);
 
-        // Clear everything
+        // Clear local storage and cart array
         cart = [];
         localStorage.removeItem('techstore_cart');
 
+        // Redirect after short delay (Task 8 Flow Test)
         setTimeout(() => {
             window.location.href = "landing.html";
         }, 1500);
@@ -107,5 +138,7 @@ window.onload = () => {
     renderCart();
 
     const greeting = document.getElementById('user-greeting');
-    if (greeting) greeting.textContent = "Welcome back, Stephanie!";
+    if (greeting) {
+        greeting.textContent = "Welcome back, Stephanie!";
+    }
 };
