@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Checkout | TechStore</title>
+</head>
+<body>
+<header><strong>CHECKOUT</strong></header>
+<main class="checkout-layout" style="display: flex; gap: 40px; padding: 50px; max-width: 1200px; margin: auto;">
+
+    <div style="flex: 2;">
+        <h3>Shipping Details</h3>
+        <form id="checkout-form">
+            <input type="text" id="fullname" placeholder="Full Name" required
+                   style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd;">
+
+            <input type="email" id="email" placeholder="Email Address" required
+                   style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd;">
+
+            <textarea id="address" placeholder="Complete Shipping Address" required
+                      style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; height: 100px; font-family: inherit;"></textarea>
+
+            <button type="submit" class="shimmer-btn" style="width: 100%; padding: 15px; background: #333; color: white; border-radius: 10px; cursor: pointer;">
+                Place Order
+            </button>
+        </form>
+    </div>
+
+    <aside style="flex: 1; background: #f9f9f9; padding: 30px; border-radius: 20px; height: fit-content; border: 1px solid #eee;">
+        <h3>Order Summary</h3>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
+        <h2 id="cart-total" style="color: #222;">Total: ₱0.00</h2>
+        <p style="font-size: 0.9rem; color: #666;">Tax and shipping included.</p>
+    </aside>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
