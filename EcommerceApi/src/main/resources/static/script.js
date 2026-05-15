@@ -2,10 +2,44 @@
 let products = [];
 let cart = JSON.parse(localStorage.getItem('techstore_cart')) || [];
 
+/* --- TASK 7: SECURE FETCH WRAPPER --- */
+// Isang custom fetch wrapper para sa lahat ng API requests mo para i-intercept ang auth errors
+async function secureFetch(url, options = {}) {
+    // Siguraduhing kasama ang credentials para laging ipadala ang JSESSIONID cookie
+    options.credentials = 'include';
+
+    try {
+        const response = await fetch(url, options);
+
+        // 1. Intercept 401 Unauthorized (Hindi naka-login o expired ang session)
+        if (response.status === 401) {
+            alert("Session expired or not logged in. Redirecting to login page...");
+            window.location.href = "/login.html"; // Redirect logic kung nasaan ang login UI mo
+            return null;
+        }
+
+        // 2. Intercept 403 Forbidden (Naka-login pero maling role ang sumusubok mag-access)
+        if (response.status === 403) {
+            alert("Access Denied: You do not have permission to perform this action.");
+            // Pwedeng mag-stay sa page o i-redirect sa safe page tulad ng index.html
+            return null;
+        }
+
+        return response;
+    } catch (error) {
+        console.error("Fetch error:", error);
+        throw error;
+    }
+}
+
 /* --- FETCH PRODUCTS FROM API --- */
 async function fetchProducts() {
     try {
-        const response = await fetch('http://localhost:8080/api/products');
+        // Task 7 Update: Ginamit natin ang secureFetch sa halip na regular fetch
+        const response = await secureFetch('http://localhost:8080/api/products');
+
+        // Kung na-intercept ng 401 o 403 at nag-return ng null, hinto na dito
+        if (!response) return;
 
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status}`);
