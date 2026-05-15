@@ -1,5 +1,55 @@
+# TechStore E-Commerce (Laboratory 9)
 
-# 🛒 Ecommerce API Project
+
+
+---
+
+## 1. Security Architecture
+
+The application implements a robust **Session-Based Authentication** model combined with global filters to secure stateful data and protect specific presentation layers.
+
+### Mechanism Flow:
+* **Session Lifecycle:** Upon successful authentication via `/api/v1/auth/login`, Spring Security creates a server-side session (`HttpSession`) if required.
+* **Token Identifier:** The server returns a secure cookie identifier called `JSESSIONID` to the client container.
+* **State Verification:** For every subsequent state-changing or secured operation, the client automatically passes the session cookie back to the server, matching the pointer to grant access.
+* **Frontend Interceptors:** Dynamic scripts are embedded natively within the `<head>` of sensitive pages (`checkout.html`, `admin.html`) to intercept client loading, pinging session validation endpoints before rendering the DOM structure to mitigate layout-flickering leaks.
+
+---
+
+## 2. Validation Rules
+
+To preserve data integrity, server-side entity validations are applied using standard constraints before saving to the persistent MySQL layer:
+
+| Entity / Field | Validation Constraint | Description / Failure Log |
+| :--- | :--- | :--- |
+| **User: username** | `@NotBlank`, `@Size(min = 4)` | Cannot be empty; must contain a user-friendly identifier. |
+| **User: password** | `@NotBlank`, `@Size(min = 8)` | Must meet modern entropy requirements. |
+| **Product: name** | `@NotBlank` | Product name is strict and cannot be empty. |
+| **Product: price** | `@DecimalMin(value = "0.01")` | Price cannot be negative or zero. |
+
+---
+
+## 3. API Reference & Authentication Requirements
+
+The following matrix lists the final endpoints exposed by the backend API and their corresponding access control configurations:
+
+| HTTP Method | API Endpoint | Auth Required? | Allowed Roles / Scope |
+| :--- | :--- | :--- | :--- |
+| **POST** | `/api/v1/auth/register` | ❌ No | Public registration for all clients |
+| **POST** | `/api/v1/auth/login` | ❌ No | Process form authentication |
+| **POST** | `/api/v1/auth/logout` |  Yes | Invalidates active `JSESSIONID` |
+| **GET** | `/api/v1/products` |  Yes | Authenticated Users (`ROLE_USER`, `ROLE_ADMIN`) |
+| **POST** | `/api/v1/products` |  Yes | Restrictive Scope (`ROLE_ADMIN` Only) |
+| **GET** | `/api/v1/users/me` |  Yes | Current active session verification |
+
+---
+
+## 4. User-Friendly Errors
+
+* **Error Resolution:** Custom failure handlers return structured, clean JSON responses with deterministic HTTP error numbers (`401 Unauthorized`, `403 Forbidden`, `400 Bad Request`) instead of throwing stack traces directly to the client view interface.
+
+
+🛒 Ecommerce API Project
 =======
 # TechStore E-Commerce Project (LABORATORY 8)
 

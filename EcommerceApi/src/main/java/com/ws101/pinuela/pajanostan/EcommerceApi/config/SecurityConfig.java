@@ -20,7 +20,6 @@ public class SecurityConfig {
 
                 // Configure Endpoints
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Payagan ang lahat na ma-access ang static frontend UI pages at assets
                         .requestMatchers(
                                 "/",
                                 "/index.html",
@@ -32,10 +31,9 @@ public class SecurityConfig {
                                 "/script.js"
                         ).permitAll()
 
-                        // 2. Payagan ang public registration endpoint
                         .requestMatchers("/api/v1/auth/register").permitAll()
 
-                        // 3. Lahat ng secured API requests, kailangan ng authenticated session cookie
+                        // Lahat ng secured API requests, need ng authenticated session cookie
                         .requestMatchers("/api/v1/products/**").authenticated()
                         .anyRequest().authenticated()
                 )
