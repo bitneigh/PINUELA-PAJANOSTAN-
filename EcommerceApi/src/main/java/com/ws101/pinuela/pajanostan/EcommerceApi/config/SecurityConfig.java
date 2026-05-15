@@ -6,25 +6,36 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-
                 .csrf(csrf -> csrf.disable())
 
                 // Configure Endpoints
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Payagan ang lahat na ma-access ang static frontend UI pages at assets
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/products.html",
+                                "/checkout.html",
+                                "/admin.html",
+                                "/login.html",
+                                "/style.css",
+                                "/script.js"
+                        ).permitAll()
 
+                        // 2. Payagan ang public registration endpoint
                         .requestMatchers("/api/v1/auth/register").permitAll()
+
+                        // 3. Lahat ng secured API requests, kailangan ng authenticated session cookie
                         .requestMatchers("/api/v1/products/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -41,7 +52,6 @@ public class SecurityConfig {
                             response.setStatus(401);
                         })
                         .permitAll()
-
                 )
 
                 // Logout Endpoint
@@ -52,7 +62,7 @@ public class SecurityConfig {
                         .permitAll()
                 )
 
-                // 5. Session Management (Task 1.4 & 2.2)
+                // Session Management
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 );
