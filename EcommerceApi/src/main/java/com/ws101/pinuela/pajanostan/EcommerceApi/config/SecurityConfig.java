@@ -2,68 +2,76 @@ package com.ws101.pinuela.pajanostan.EcommerceApi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
+
+    /**
+     * Constructor injection linking decoupled application context operational components.
+     */
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.authenticationProvider = authenticationProvider;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // 1. Disable CSRF since the application relies on stateless tokens, not session cookies
                 .csrf(csrf -> csrf.disable())
 
-                // Configure Endpoints
+                // 2. Set session management policy strictly to STATELESS
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 3. Configure explicit public access paths and route block boundaries
                 .authorizeHttpRequests(auth -> auth
+                        // Whitelist frontend assets and web pages
                         .requestMatchers(
                                 "/",
                                 "/index.html",
                                 "/products.html",
+                                "/landing.html",
                                 "/checkout.html",
-                                "/admin.html",
+                                "/register.html",
                                 "/login.html",
+                                "/admin.html",
                                 "/style.css",
                                 "/script.js"
                         ).permitAll()
 
-                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        // Allow access to open authentication utilities endpoints
+                        .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // Lahat ng secured API requests, need ng authenticated session cookie
-                        .requestMatchers("/api/v1/products/**").authenticated()
+                        // Expose products visibility paths dynamically to public users
+                        .requestMatchers("/api/v1/products/**").permitAll()
+
+                        // 🌟 CRITICAL FIX: Permit your transactional orders API endpoint path explicitly
+                        .requestMatchers("/api/v1/orders/**").permitAll()
+
+                        // Secure remaining transactional routing patterns behind filter guard blocks
                         .anyRequest().authenticated()
                 )
 
-                // Login Endpoint
-                .formLogin(form -> form
-                        .loginProcessingUrl("/api/v1/auth/login")
-
-                        .successHandler((request, response, authentication) -> {
-                            response.setStatus(200);
-                        })
-
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(401);
-                        })
-                        .permitAll()
+                // 4. Gracefully emit raw clean 401 error responses for failed security verifications
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(401, "Unauthorized: Validation processing routine failed.")
+                        )
                 )
 
-                // Logout Endpoint
-                .logout(logout -> logout
-                        .logoutUrl("/api/v1/auth/logout") // Specific URL for logout
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                        .permitAll()
-                )
-
-                // Session Management
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                );
+                // 5. Connect data verification parameters context layers mapping engines
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

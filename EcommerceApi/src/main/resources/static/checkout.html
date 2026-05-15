@@ -3,59 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <script>
-        (function checkAuthentication() {
-            // Tinitingnan kung logged in ang user bago i-render ang mukha ng checkout page
-            fetch('/api/v1/users/me', { credentials: 'include' })
-                .then(response => {
-                    if (response.status === 401) {
-                        // Kung hindi logged in, itatapon kaagad sa login page
-                        alert("Protected Route: Please sign in first.");
-                        window.location.href = "/login.html";
-                    } else if (response.status === 403) {
-                        // Kung may account pero bawal mag-checkout batay sa manual rules
-                        alert("Access Denied: You cannot access checkout.");
-                        window.location.href = "/login.html";
-                    }
-                })
-                .catch(error => {
-                    console.error("Security check failed:", error);
-                    window.location.href = "/login.html";
-                });
-        })();
-    </script>
+    <title>Secure Checkout - TechStore</title>
     <link rel="stylesheet" href="style.css">
-    <title>Checkout | TechStore</title>
 </head>
 <body>
-<header><strong>CHECKOUT</strong></header>
-<main class="checkout-layout" style="display: flex; gap: 40px; padding: 50px; max-width: 1200px; margin: auto;">
 
-    <div style="flex: 2;">
-        <h3>Shipping Details</h3>
+<header>
+    <h1>Tech<span>Store</span></h1>
+    <nav>
+        <ul>
+            <li><a href="/landing.html">Shop</a></li>
+            <li><a href="/checkout.html">Checkout</a></li>
+            <li><a href="/account.html">Account</a></li>
+            <li><span class="logout-link" onclick="handleLogout()">Logout</span></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="checkout-wrapper">
+    <div class="glass-card">
+        <h2>Shipping Details</h2>
         <form id="checkout-form">
-            <input type="text" id="fullname" placeholder="Full Name" required
-                   style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd;">
-
-            <input type="email" id="email" placeholder="Email Address" required
-                   style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd;">
-
-            <textarea id="address" placeholder="Complete Shipping Address" required
-                      style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; height: 100px; font-family: inherit;"></textarea>
-
-            <button type="submit" class="shimmer-btn" style="width: 100%; padding: 15px; background: #333; color: white; border-radius: 10px; cursor: pointer;">
-                Place Order
-            </button>
+            <div class="form-group">
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" required placeholder="Juan Dela Cruz">
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" required placeholder="juan@example.com">
+            </div>
+            <div class="form-group">
+                <label for="address">Complete Shipping Address</label>
+                <textarea id="address" rows="4" required placeholder="House No., Street Name, Barangay, City, Province"></textarea>
+            </div>
+            <button type="submit" class="btn-action">Place Order</button>
         </form>
     </div>
 
-    <aside style="flex: 1; background: #f9f9f9; padding: 30px; border-radius: 20px; height: fit-content; border: 1px solid #eee;">
-        <h3>Order Summary</h3>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
-        <h2 id="cart-total" style="color: #222;">Total: ₱0.00</h2>
-        <p style="font-size: 0.9rem; color: #666;">Tax and shipping included.</p>
-    </aside>
+    <div class="glass-card" style="height: max-content;">
+        <h2>Order Summary</h2>
+        <div id="cart-items-container"></div>
+        <div class="cart-total-price" id="cart-total" style="margin-top: 1.5rem; font-size: 1.4rem;">Total: ₱0</div>
+    </div>
 </main>
 
 <script src="script.js"></script>

@@ -3,67 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - TechStore</title>
     <link rel="stylesheet" href="style.css">
-    <title>My Account</title>
 </head>
 <body>
-    <header>
-        <div class="logo"><strong>TECHSTORE</strong></div>
-        <nav>
-            <ul>
-                <li><a href="landing.html">Home</a></li>
-                <li><a href="products.html">Shop</a></li>
-                <li><a href="cart.html">Cart</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <main class="profile-container">
-        <section class="profile-header">
-            <div>
-                <h1 style="margin: 0;">Welcome back, Customer!</h1>
-                <p style="color: #86868b; margin: 5px 0 0 0;">Member since March 2026</p>
-            </div>
-        </section>
+<header>
+    <h1>Tech<span>Store</span></h1>
+    <nav>
+        <ul>
+            <li><a href="/landing.html">Shop</a></li>
+            <li><a href="/checkout.html">Checkout</a></li>
+            <li><a href="/account.html">Account</a></li>
+            <li><span class="logout-link" onclick="handleLogout()">Logout</span></li>
+        </ul>
+    </nav>
+</header>
 
-        <div class="checkout-layout"> <div style="flex: 2;">
-                <h3>Recent Orders</h3>
-                
-                <div class="order-card">
-                    <div>
-                        <strong>Order #88219</strong>
-                        <p style="margin: 5px 0; font-size: 14px; color: #86868b;">Placed on March 4, 2026</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <span class="status-badge">Delivered</span>
-                        <p style="font-weight: bold; margin-top: 5px;">$299</p>
-                    </div>
-                </div>
-
-                <div class="order-card">
-                    <div>
-                        <strong>Order #88102</strong>
-                        <p style="margin: 6px 0; font-size: 14px; color: #86868b;">Placed on Feb 20, 2026</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <span class="status-badge" style="background: #f5f5f7; color: #86868b;">Archived</span>
-                        <p style="font-weight: bold; margin-top: 5px;">$150</p>
-                    </div>
-                </div>
-            </div>
-
-            <aside style="flex: 1;">
-                <div style="background: var(--card-bg); padding: 30px; border-radius: var(--radius);">
-                    <h3>Account Settings</h3>
-                    <p style="font-size: 14px;"><strong>Email:</strong> customer@example.com</p>
-                    <p style="font-size: 14px;"><strong>Shipping:</strong> 123 Tech Lane, Silicon Valley</p>
-                    
-                    <button class="shimmer-btn" style="width: 100%; margin-top: 20px;">Edit Profile</button>
-                    <button style="width: 100%; margin-top: 10px; background: none; color: #ff3b30; border: 1px solid #ff3b30;">Sign Out</button>
-                </div>
-            </aside>
+<main class="profile-container">
+    <div class="profile-header">
+        <div class="avatar-circle">U</div>
+        <div>
+            <h2 id="profile-username" style="color: white; margin-bottom: 4px;">Loading Profile...</h2>
+            <p style="color: #a0a5b5; font-size: 0.9rem;">Premium Account Member</p>
         </div>
-    </main>
-    <script src="script.js"></script>
+    </div>
+
+    <div class="glass-card">
+        <h3 style="margin-bottom: 1.5rem;">Recent Order History</h3>
+
+        <div class="order-card">
+            <div>
+                <h4 style="color: white; margin-bottom: 4px;">Order #TS-94820</h4>
+                <p style="color: #a0a5b5; font-size: 0.85rem;">Placed on May 16, 2026</p>
+            </div>
+            <span class="status-badge">Delivered</span>
+        </div>
+
+        <div class="order-card">
+            <div>
+                <h4 style="color: white; margin-bottom: 4px;">Order #TS-94115</h4>
+                <p style="color: #a0a5b5; font-size: 0.85rem;">Placed on May 10, 2026</p>
+            </div>
+            <span class="status-badge" style="background: rgba(0, 113, 227, 0.15); color: #0071e3;">In Transit</span>
+        </div>
+    </div>
+</main>
+
+<script src="script.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        try {
+            const token = localStorage.getItem('jwt_token');
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('profile-username').textContent = payload.sub;
+                document.querySelector('.avatar-circle').textContent = payload.sub.charAt(0).toUpperCase();
+            }
+        } catch (e) {
+            document.getElementById('profile-username').textContent = "User Profile";
+        }
+    });
+</script>
 </body>
 </html>

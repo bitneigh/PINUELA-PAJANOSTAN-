@@ -1,33 +1,54 @@
-/* --- DATA STRUCTURE --- */
+/* --- STATE MANAGER VARIABLES --- */
 let products = [];
-let cart = JSON.parse(localStorage.getItem('techstore_cart')) || [];
+let cart = [];
 
-/* --- TASK 7: SECURE FETCH WRAPPER --- */
-// Isang custom fetch wrapper para sa lahat ng API requests mo para i-intercept ang auth errors
+// Helper function to dynamically calculate cart storage context keys per individual user identity
+function getCartStorageKey() {
+    const activeToken = localStorage.getItem('jwt_token');
+    if (!activeToken) return 'techstore_cart_anonymous';
+    try {
+        // Safe base64 tracking extraction to parse out username from token payload layers
+        const payloadBase64 = activeToken.split('.')[1];
+        const decodedPayload = JSON.parse(atob(payloadBase64));
+        return `techstore_cart_${decodedPayload.sub}`;
+    } catch (e) {
+        return 'techstore_cart_anonymous';
+    }
+}
+
+// Dynamically sync user specific tracking allocations
+function loadUserSpecificCart() {
+    const key = getCartStorageKey();
+    cart = JSON.parse(localStorage.getItem(key)) || [];
+}
+
+/* --- TASK 10: STATELESS JWT SECURE FETCH WRAPPER --- */
 async function secureFetch(url, options = {}) {
-    // Siguraduhing kasama ang credentials para laging ipadala ang JSESSIONID cookie
-    options.credentials = 'include';
+    options.headers = options.headers || {};
+    const token = localStorage.getItem('jwt_token');
+
+    if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`;
+    }
 
     try {
         const response = await fetch(url, options);
 
-        // 1. Intercept 401 Unauthorized (Hindi naka-login o expired ang session)
         if (response.status === 401) {
-            alert("Session expired or not logged in. Redirecting to login page...");
-            window.location.href = "/login.html"; // Redirect logic kung nasaan ang login UI mo
+            alert("Session expired or unauthorized. Redirecting to login page...");
+            localStorage.removeItem('jwt_token');
+            window.location.href = "/login.html";
             return null;
         }
 
-        // 2. Intercept 403 Forbidden (Naka-login pero maling role ang sumusubok mag-access)
         if (response.status === 403) {
             alert("Access Denied: You do not have permission to perform this action.");
-            // Pwedeng mag-stay sa page o i-redirect sa safe page tulad ng index.html
             return null;
         }
 
         return response;
     } catch (error) {
-        console.error("Fetch error:", error);
+        console.error("Secure fetch tracking error:", error);
         throw error;
     }
 }
@@ -35,25 +56,15 @@ async function secureFetch(url, options = {}) {
 /* --- FETCH PRODUCTS FROM API --- */
 async function fetchProducts() {
     try {
-        // Task 7 Update: Ginamit natin ang secureFetch sa halip na regular fetch
-        const response = await secureFetch('http://localhost:8080/api/products');
-
-        // Kung na-intercept ng 401 o 403 at nag-return ng null, hinto na dito
+        const response = await secureFetch('http://localhost:8080/api/v1/products');
         if (!response) return;
-
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
         products = await response.json();
-
-        // Ito yung kailangan mo para makita ang listahan sa F12 Console
-        console.log("Task 8 - Fetched Products from Database:", products);
-
         renderProducts();
     } catch (error) {
         console.error("Fetch API Error:", error.message);
-        const grid = document.querySelector('.product-grid');
+        const grid = document.getElementById('product-grid-target') || document.querySelector('.product-grid');
         if (grid) {
             grid.innerHTML = `<p style="color:red; text-align:center;">Failed to load products: ${error.message}</p>`;
         }
@@ -62,16 +73,16 @@ async function fetchProducts() {
 
 /* --- RENDER PRODUCTS --- */
 function renderProducts() {
-    const grid = document.querySelector('.product-grid');
+    const grid = document.getElementById('product-grid-target') || document.querySelector('.product-grid');
     if (!grid) return;
 
     grid.innerHTML = products.length === 0 ? "<p>No products available right now.</p>" : "";
 
     products.forEach(p => {
         const article = document.createElement('article');
-        article.className = "product-card"; // Added class for easier styling/animation
+        article.className = "product-card";
         article.innerHTML = `
-            <img src="${p.imageUrl || 'https://via.placeholder.com/400'}" alt="${p.name}">
+            <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500'}" alt="${p.name}">
             <div class="product-info">
                 <h3>${p.name}</h3>
                 <p class="price">₱${p.price.toLocaleString()}</p>
@@ -82,9 +93,8 @@ function renderProducts() {
     });
 }
 
-/* --- CART & EVENT LISTENERS --- */
+/* --- CART EVENTS & PERSISTENCE HANDLING --- */
 document.body.addEventListener('click', (e) => {
-    // Add to Cart Logic
     if (e.target.classList.contains('add-to-cart')) {
         const id = parseInt(e.target.getAttribute('data-id'));
         const product = products.find(prod => prod.id === id);
@@ -97,30 +107,24 @@ document.body.addEventListener('click', (e) => {
                 cart.push({ ...product, quantity: 1 });
             }
 
-            localStorage.setItem('techstore_cart', JSON.stringify(cart));
-
-            // Interaction feedback
+            localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
             alert(`${product.name} added to cart!`);
             renderCart();
         }
     }
 });
 
-/* --- RENDER CART & UPDATE TOTAL --- */
 function renderCart() {
     const container = document.getElementById('cart-items-container');
     const totalEl = document.getElementById('cart-total');
 
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    if (totalEl) {
-        totalEl.textContent = `Total: ₱${total.toLocaleString()}`;
-    }
+    if (totalEl) totalEl.textContent = `Total: ₱${total.toLocaleString()}`;
 
     if (!container) return;
+    container.innerHTML = cart.length === 0 ? "<p style='color:#a0a5b5;'>Your bag is empty.</p>" : "";
 
-    container.innerHTML = cart.length === 0 ? "<p>Your bag is empty.</p>" : "";
-
-    cart.forEach((item, index) => {
+    cart.forEach((item) => {
         const div = document.createElement('div');
         div.className = "cart-item";
         div.innerHTML = `
@@ -128,51 +132,129 @@ function renderCart() {
                 <h4>${item.name}</h4>
                 <p>₱${item.price.toLocaleString()} x ${item.quantity}</p>
             </div>
-            <input type="number" value="${item.quantity}" min="0" 
-                   class="qty-change" data-index="${index}" 
-                   style="width: 50px; text-align: center;">
         `;
         container.appendChild(div);
     });
 }
 
-/* --- CHECKOUT FORM HANDLING --- */
-document.addEventListener('submit', (e) => {
+/* --- GLOBAL FORM SUBMISSION HANDLERS --- */
+document.addEventListener('submit', async (e) => {
+
+    // Auth Case 1: Processing Sign In Actions
+    if (e.target.id === 'login-form') {
+        e.preventDefault();
+        const usernameInput = document.getElementById('username').value;
+        const passwordInput = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('http://localhost:8080/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            });
+
+            if (!response.ok) throw new Error('Invalid credentials');
+            const data = await response.json();
+
+            if (data.token) {
+                localStorage.setItem('jwt_token', data.token);
+                alert('Authentication Verified! Transferring access controls.');
+                window.location.href = "/landing.html";
+            }
+        } catch (err) {
+            alert('Sign in failed. Verify parameters match accurately.');
+            console.error(err);
+        }
+    }
+
+    // Auth Case 2: Processing Sign Up Actions
+    if (e.target.id === 'register-form') {
+        e.preventDefault();
+        const usernameInput = document.getElementById('reg-username').value;
+        const passwordInput = document.getElementById('reg-password').value;
+        const roleInput = document.getElementById('reg-role').value;
+
+        try {
+            const response = await fetch('http://localhost:8080/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: usernameInput, password: passwordInput, role: roleInput })
+            });
+
+            if (!response.ok) {
+                const errMsg = await response.text();
+                throw new Error(errMsg || 'Registration failed');
+            }
+
+            alert('Account created successfully! Redirecting to login page...');
+            window.location.href = "/login.html";
+        } catch (err) {
+            alert(`Registration Error: ${err.message}`);
+            console.error(err);
+        }
+    }
+
+    // Order Checkout Case: Processing Cart Order Submissions
     if (e.target.id === 'checkout-form') {
         e.preventDefault();
-
-        const nameInput = document.getElementById('fullname');
-        const addressInput = document.getElementById('address');
-
-        const name = nameInput ? nameInput.value.trim() : "Customer";
-        const address = addressInput ? addressInput.value.trim() : "Not specified";
 
         if (cart.length === 0) {
             alert("Your cart is empty! Add some items before checking out.");
             return;
         }
 
-        // Show processing state
-        alert(`Hi ${name}! We are now processing your order for: ${address}.`);
+        // Sends order details payload to the secure backend REST endpoint using secureFetch
+        const response = await secureFetch('http://localhost:8080/api/v1/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: cart })
+        });
 
-        // Clear local storage and cart array
-        cart = [];
-        localStorage.removeItem('techstore_cart');
-
-        // Redirect after short delay (Task 8 Flow Test)
-        setTimeout(() => {
-            window.location.href = "landing.html";
-        }, 1500);
+        // Clear local storage cart state and redirect to store catalog view upon successful persist
+        if (response && response.ok) {
+            alert(`Order processed successfully! Returning to home catalog.`);
+            localStorage.removeItem(getCartStorageKey());
+            cart = [];
+            setTimeout(() => {
+                window.location.href = "/landing.html";
+            }, 1000);
+        }
     }
 });
 
-/* --- INITIALIZATION --- */
+/* --- SYSTEM GLOBAL LOGOUT UTILITY --- */
+function handleLogout() {
+    localStorage.removeItem('jwt_token');
+    alert("Logged out securely from active workstation state.");
+    window.location.href = "/login.html";
+}
+
+/* --- BOOTSTRAP INITIALIZATION PIPELINE --- */
 window.onload = () => {
-    fetchProducts();
+    loadUserSpecificCart();
+
+    // Safe view container check: Only fire product fetch logic if target DOM element wrapper exists
+    const productCatalogTarget = document.getElementById('product-grid-target') || document.querySelector('.product-grid');
+    if (productCatalogTarget) {
+        fetchProducts();
+    }
+
     renderCart();
 
+    // User Profile Greeting: Extrapolate user subject metadata fields from valid active JWT payload
     const greeting = document.getElementById('user-greeting');
     if (greeting) {
-        greeting.textContent = "Welcome back, Stephanie!";
+        try {
+            const activeToken = localStorage.getItem('jwt_token');
+            if (activeToken) {
+                const payloadBase64 = activeToken.split('.')[1];
+                const decodedPayload = JSON.parse(atob(payloadBase64));
+                greeting.textContent = `Welcome back, ${decodedPayload.sub}!`;
+            } else {
+                greeting.textContent = "Welcome back!";
+            }
+        } catch (e) {
+            greeting.textContent = "Welcome back!";
+        }
     }
 };

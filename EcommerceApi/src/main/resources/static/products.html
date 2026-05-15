@@ -3,48 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace - TechStore</title>
     <link rel="stylesheet" href="style.css">
-    <title>Premium Collection | TechStore</title>
 </head>
 <body>
-    <header>
-        <div class="logo"><strong>TECHSTORE</strong></div>
-        <nav>
-            <ul>
-                <li><a href="landing.html">Home</a></li>
-                <li><a href="products.html">Shop</a></li>
-                <li><a href="cart.html">Cart</a></li>
-                <li><a href="account.html">Profile</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <div class="shop-container">
-        <aside style="padding: 20px; background: #fff; border-radius: 20px; margin-bottom: 20px;">
-            <h3>Filters</h3>
-            <label><input type="checkbox"> Audio</label><br>
-            <label><input type="checkbox"> Wearables</label>
-        </aside>
+<header>
+    <h1>Tech<span>Store</span></h1>
+    <nav>
+        <ul>
+            <li><a href="/landing.html">Shop</a></li>
+            <li><a href="/checkout.html">Checkout</a></li>
+            <li><a href="/account.html">Account</a></li>
+            <li><span class="logout-link" onclick="handleLogout()">Logout</span></li>
+        </ul>
+    </nav>
+</header>
 
-        <main class="product-grid">
-            <article>
-                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400" alt="Headphones">
-                <h4>Wireless Max</h4>
-                <p style="color: var(--accent); font-weight: bold;">$299</p>
-                <a href="detail.html"><button class="btn-shimmer">View Details</button></a>
-            </article>
+<main class="main-container">
+    <div class="sidebar-panel">
+        <div class="glass-card">
+            <h2 id="user-greeting">Welcome back!</h2>
+            <div class="filter-group">
+                <label class="filter-item"><input type="checkbox"> Audio Devices</label>
+                <label class="filter-item"><input type="checkbox"> Wearables</label>
+                <label class="filter-item"><input type="checkbox"> Laptops</label>
+            </div>
+        </div>
 
-            <article>
-                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400" alt="Watch">
-                <h4>Smart Watch Ultra</h4>
-                <p style="color: var(--accent); font-weight: bold;">$399</p>
-                <a href="detail.html"><button class="btn-shimmer">View Details</button></a>
-            </article>
-
-         
-        </main>
+        <div class="glass-card">
+            <h3>Shopping Bag</h3>
+            <div id="cart-items-container"></div>
+            <div class="cart-total-price" id="cart-total">Total: ₱0</div>
+            <button class="shimmer-btn" onclick="window.location.href='/checkout.html'">Go to Checkout</button>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <div class="product-grid" id="product-grid-target">
+    </div>
+</main>
+
+<script src="script.js"></script>
 </body>
 </html>
-
